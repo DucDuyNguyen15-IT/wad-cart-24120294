@@ -6,9 +6,9 @@
     "test": "node --test",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "check": "node --test && prettier --check ."
+    "check": "npm run format:check && npm test"
   },
   "devDependencies": {
-    "prettier": "^3.9.9"
+    "prettier": "3.9.9"
   }
 }
