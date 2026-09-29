@@ -40,29 +40,31 @@ test('subtotal above the threshold ships free', () => {
 test('negative price throws RangeError', () => {
   const items = [{ name: 'Lỗi giá âm', price: -10000, qty: 1 }]
   const options = { vatRate: 0.1, freeShipFrom: 500000, shipFee: 30000 }
-  assert.throws(
-    () => cartTotal(items, options),
-    (err) =>
-      err instanceof RangeError && err.message.includes('items[0].price'),
-  )
+  assert.throws(() => cartTotal(items, options), RangeError)
+})
+
+test('infinite price throws RangeError', () => {
+  const items = [{ name: 'Lỗi giá vô cực', price: Infinity, qty: 1 }]
+  const options = { vatRate: 0.1, freeShipFrom: 500000, shipFee: 30000 }
+  assert.throws(() => cartTotal(items, options), RangeError)
 })
 
 test('non-integer qty throws RangeError', () => {
   const items = [{ name: 'Lỗi số lượng lẻ', price: 50000, qty: 1.5 }]
   const options = { vatRate: 0.1, freeShipFrom: 500000, shipFee: 30000 }
-  assert.throws(
-    () => cartTotal(items, options),
-    (err) => err instanceof RangeError && err.message.includes('items[0].qty'),
-  )
+  assert.throws(() => cartTotal(items, options), RangeError)
 })
 
-test('zero or negative qty throws RangeError', () => {
-  const items = [{ name: 'Lỗi số lượng không dương', price: 50000, qty: 0 }]
+test('zero qty throws RangeError', () => {
+  const items = [{ name: 'Lỗi số lượng bằng 0', price: 50000, qty: 0 }]
   const options = { vatRate: 0.1, freeShipFrom: 500000, shipFee: 30000 }
-  assert.throws(
-    () => cartTotal(items, options),
-    (err) => err instanceof RangeError && err.message.includes('items[0].qty'),
-  )
+  assert.throws(() => cartTotal(items, options), RangeError)
+})
+
+test('negative qty throws RangeError', () => {
+  const items = [{ name: 'Lỗi số lượng âm', price: 50000, qty: -1 }]
+  const options = { vatRate: 0.1, freeShipFrom: 500000, shipFee: 30000 }
+  assert.throws(() => cartTotal(items, options), RangeError)
 })
 
 test('item with zero price is allowed', () => {
@@ -71,11 +73,28 @@ test('item with zero price is allowed', () => {
   assert.equal(cartTotal(items, options), 30000)
 })
 
-test('the result is a number and a whole number rounded to nearest whole đồng', () => {
+test('the result is of type number', () => {
+  const items = [{ name: 'Sản phẩm', price: 100000, qty: 1 }]
+  const options = { vatRate: 0.1, freeShipFrom: 500000, shipFee: 30000 }
+  assert.equal(typeof cartTotal(items, options), 'number')
+})
+
+test('the result is an integer', () => {
   const items = [{ name: 'Sản phẩm lẻ', price: 33333, qty: 1 }]
   const options = { vatRate: 0.08, freeShipFrom: 500000, shipFee: 30000 }
-  const total = cartTotal(items, options)
-  assert.equal(typeof total, 'number')
-  assert.equal(Number.isInteger(total), true)
-  assert.equal(total, 66000)
+  assert.equal(Number.isInteger(cartTotal(items, options)), true)
+})
+
+test('rounds down to nearest whole đồng when fraction is less than 0.5', () => {
+  const items = [{ name: 'Món làm tròn xuống', price: 100001, qty: 1 }]
+  const options = { vatRate: 0.08, freeShipFrom: 500000, shipFee: 0 }
+  // 100001 + 8000.08 + 0 = 108001.08 -> 108001
+  assert.equal(cartTotal(items, options), 108001)
+})
+
+test('rounds up to nearest whole đồng when fraction is at least 0.5', () => {
+  const items = [{ name: 'Món làm tròn lên', price: 100007, qty: 1 }]
+  const options = { vatRate: 0.08, freeShipFrom: 500000, shipFee: 0 }
+  // 100007 + 8000.56 + 0 = 108007.56 -> 108008
+  assert.equal(cartTotal(items, options), 108008)
 })

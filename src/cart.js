@@ -6,11 +6,7 @@ export function cartTotal(items, options) {
 
   for (let i = 0; i < items.length; i++) {
     const item = items[i]
-    if (
-      typeof item.price !== 'number' ||
-      Number.isNaN(item.price) ||
-      item.price < 0
-    ) {
+    if (!Number.isFinite(item.price) || item.price < 0) {
       throw new RangeError(`items[${i}].price cannot be negative`)
     }
     if (!Number.isInteger(item.qty) || item.qty <= 0) {
